@@ -1,0 +1,128 @@
+﻿@model BankAccountingSystem.WebApp.ViewModels.JournalEntryViewModel
+
+@{
+    ViewData["Title"] = "Create Journal Entry";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<hr />
+<form asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <h4>Journal Entry Header</h4>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="JournalEntry.EntryDate" class="control-label"></label>
+                <input asp-for="JournalEntry.EntryDate" class="form-control" />
+                <span asp-validation-for="JournalEntry.EntryDate" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label asp-for="JournalEntry.ReferenceNumber" class="control-label"></label>
+                <input asp-for="JournalEntry.ReferenceNumber" class="form-control" />
+                <span asp-validation-for="JournalEntry.ReferenceNumber" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="form-group">
+                <label asp-for="JournalEntry.Description" class="control-label"></label>
+                <input asp-for="JournalEntry.Description" class="form-control" />
+                <span asp-validation-for="JournalEntry.Description" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+
+    <hr />
+    <h4>Journal Entry Lines</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Debit</th>
+                <th>Credit</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @* Loop through existing lines (use editor templates for better structure) *@
+            @for (int i = 0; i < Model.Lines.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <select asp-for="Lines[i].AccountId" class="form-control account-dropdown" asp-items="Model.AccountList">
+                            <option value="">-- Select Account --</option>
+                        </select>
+                        <span asp-validation-for="Lines[i].AccountId" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="Lines[i].DebitAmount" class="form-control text-right debit-input" />
+                        <span asp-validation-for="Lines[i].DebitAmount" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="Lines[i].CreditAmount" class="form-control text-right credit-input" />
+                        <span asp-validation-for="Lines[i].CreditAmount" class="text-danger"></span>
+                    </td>
+                    <td>
+                        <input asp-for="Lines[i].Description" class="form-control" />
+                        <span asp-validation-for="Lines[i].Description" class="text-danger"></span>
+                    </td>
+                    @* TODO: Add button to remove line (needs JS) *@
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            @* TODO: Add button to add new line (needs JS) *@
+            <tr>
+                <td colspan="1"></td>
+                <td class="text-right font-weight-bold" id="totalDebit">0.00</td>
+                <td class="text-right font-weight-bold" id="totalCredit">0.00</td>
+                <td></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="form-group mt-3">
+        <input type="submit" value="Create" class="btn btn-primary" />
+        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Basic JS to calculate totals (more needed for add/remove rows)
+        $(document).ready(function () {
+            function calculateTotals() {
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                $('tbody tr').each(function() {
+                    let debitVal = parseFloat($(this).find('.debit-input').val()) || 0;
+                    let creditVal = parseFloat($(this).find('.credit-input').val()) || 0;
+                    totalDebit += debitVal;
+                    totalCredit += creditVal;
+                });
+
+                $('#totalDebit').text(totalDebit.toFixed(2));
+                $('#totalCredit').text(totalCredit.toFixed(2));
+            }
+
+            // Calculate on initial load
+            calculateTotals();
+
+            // Recalculate when debit/credit inputs change
+            $(document).on('input', '.debit-input, .credit-input', function() {
+                calculateTotals();
+            });
+
+            // --- TODO: Add JavaScript for Add Row / Remove Row ---
+            // This involves cloning a template row, updating input names/ids,
+            // and re-attaching event listeners or using event delegation.
+        });
+    </script>
+}
